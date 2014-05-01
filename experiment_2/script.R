@@ -3,6 +3,24 @@ library("neuralnet")
 # passing through missing data
 options(na.action = "na.pass")
 
+# functions -------------------------------------------------
+
+# normalizing 
+normalize <- function(x) {
+	x <- sweep(x, 2, apply(x, 2, min))
+	sweep(x, 2, apply(x, 2, max), "/") 
+}
+
+dateFun <- function(x) {
+	z <- paste(as.numeric(format(as.Date(x), "%Y")),"-01-01", sep="")
+	as.numeric(difftime(as.Date(x, "%Y-%m-%d"), as.Date(z)))+1
+}
+
+# temp <- cbind(train[1:2],lapply(train[3],DateFun))
+
+
+# /functions -------------------------------------------------
+
 # read in and merge all the available training data
 stores <- read.csv("../data/stores.csv", header=TRUE)
 features <- read.csv("../data/features.csv", header=TRUE)
@@ -11,17 +29,18 @@ train_merged <- merge(stores, features)
 train_merged <- merge(train_merged, train)
 
 # transform the Date values into numeric values between 0 (representing "01/01/XXXX") and 1 (representing "12/31/XXXX") - ignoring the year, assuming similar behavior every year.
+train_merged[c('Date')] <- lapply(train_merged[c('Date')], dateFun)
+
+# create a unique ID for each store-department pair
+train_merged <- transform(train_merged, Store_Dep = paste(Store * max(Dept) + Dept, "_", sep=""))
 
 
-# turn the qualitative columns into binary quantitative columns
-# e.g. Type: {A, B, A, B, B}
-# becomes: TypeA: {1, 0, 1, 0, 0}, TypeB: {0, 1, 0, 1, 1}
-train_net_data <- model.matrix(~Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + IsHoliday + Weekly_Sales, 
-	data = train_merged)
-train_net_data <- train_net_data[train_net_data != "(Intercept)"]
+# normalize all numeric numbers columns
+num_col_names <- c('Size', 'Temperature', 'Fuel_Price', 'MarkDown1', 'MarkDown2', 'MarkDown3', 'MarkDown4', 'MarkDown5', 'CPI', 'Unemployment')
+train_merged[num_col_names] <- normalize(train_merged[num_col_names])
 
-net <- neuralnet(Weekly_Sales ~ TypeA + TypeB + TypeC + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + IsHolidayTRUE, 
-	train_net_data,  hidden = 5, threshold = 0.005,
+net <- neuralnet(Weekly_Sales ~ Date + IsHoliday + Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + Store_Dep, 
+	train_merged,  hidden = 40, threshold = 0.005,
 	stepmax = 1000000, rep = 1, startweights = NULL,
 	learningrate.limit = NULL, learningrate.factor = NULL, learningrate=0.1,
 	lifesign = "full", lifesign.step = 1000,
@@ -49,8 +68,7 @@ for (col_name in missing_col_names)
 # becomes: TypeA: {1, 0, 1, 0, 0}, TypeB: {0, 1, 0, 1, 1}
 test_net_data <- model.matrix(~Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + IsHoliday, 
 	data = test_merged)
-train_net_data <- train_net_data[train_net_data != "(Intercept)"]
-
+a <- train_net_data[, -1] # delete the generated "(Intercept)" column containing only "1"
 
 Id <- paste(test[, 'Store'], test[, 'Dept'], test[, 'Date'], sep = "_")
 prediction <- compute(net, test_net_data, rep = 1)
@@ -58,6 +76,7 @@ Weekly_Sales <- prediction$net.result
 
 result <- cbind(Id, Weekly_Sales)
 write.csv(result, file ="result.csv", row.names=FALSE)
+
 
 # log in to diadem
 # ssh gekonwi@129.64.2.200
