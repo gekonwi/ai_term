@@ -50,6 +50,7 @@ prediction <- compute(net, test_net_data, rep = 1)
 Weekly_Sales <- prediction$net.result
 
 result <- cbind(Id, Weekly_Sales)
+write.csv(result, file ="result.csv", row.names=FALSE)
 
 # log in to diadem
 # ssh gekonwi@129.64.2.200
