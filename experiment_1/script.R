@@ -3,9 +3,9 @@ library("neuralnet")
 # passing through missing data
 options(na.action = "na.pass")
 
-stores <- read.csv("data/stores.csv", header=TRUE)
-features <- read.csv("data/features.csv", header=TRUE)
-train <- read.csv("data/train.csv", header=TRUE)
+stores <- read.csv("../data/stores.csv", header=TRUE)
+features <- read.csv("../data/features.csv", header=TRUE)
+train <- read.csv("../data/train.csv", header=TRUE)
 train_merged <- merge(stores, features)
 train_merged <- merge(train_merged, train)
 
@@ -25,7 +25,7 @@ net <- neuralnet(Weekly_Sales ~ TypeA + TypeB + TypeC + Temperature + Fuel_Price
 	linear.output = TRUE, exclude = NULL,
 	constant.weights = NULL, likelihood = FALSE)
 
-test <- read.csv("data/test.csv", header=TRUE)
+test <- read.csv("../data/test.csv", header=TRUE)
 
 test_merged <- merge(stores, test)
 
