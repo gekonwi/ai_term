@@ -21,3 +21,10 @@ net <- neuralnet(Weekly_Sales ~ TypeA + TypeB + TypeC + Temperature + Fuel_Price
 	constant.weights = NULL, likelihood = FALSE)
 
 # test <- read.csv("data/test.csv", header=TRUE)
+
+# log in to diadem
+# ssh gekonwi@129.64.2.200
+
+# on UNix run this:
+# cd ~/Documents/ai_term
+# export R_LIBS="~/myRdir"
