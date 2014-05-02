@@ -114,10 +114,10 @@ num_col_names <- c('Size', 'Temperature', 'Fuel_Price', 'MarkDown1', 'MarkDown2'
 train_merged[num_col_names] <- normalize(train_merged[num_col_names])
 
 net <- neuralnet(Weekly_Sales ~ Date + IsHoliday + Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + Store_Dep, 
-	train_merged,  hidden = 40, threshold = 0.005,
+	train_merged,  hidden = 10, threshold = 0.005,
 	stepmax = 1000000, rep = 1, startweights = NULL,
 	learningrate.limit = NULL, learningrate.factor = NULL, learningrate=0.1,
-	lifesign = "full", lifesign.step = 1000,
+	lifesign = "full", lifesign.step = 100,
 	algorithm = "rprop+",
 	err.fct = "sse", act.fct = "logistic",
 	linear.output = TRUE, exclude = NULL,
