@@ -28,6 +28,10 @@ train <- read.csv("../data/train.csv", header=TRUE)
 train_merged <- merge(stores, features)
 train_merged <- merge(train_merged, train)
 
+# tale only the data for store 1 to 5 as a sample (faster calculation)
+train_merged <- subset(train_merged, Store <= 5)
+
+
 # transform the Date values into numeric values between 0 (representing "01/01/XXXX") and 1 (representing "12/31/XXXX") - ignoring the year, assuming similar behavior every year.
 train_merged[c('Date')] <- lapply(train_merged[c('Date')], dateFun)
 
@@ -56,11 +60,15 @@ train_merged$Type[train_merged$Type == 'C'] <- '3'
 train_merged[c('Type')] <- as.numeric(as.character(train_merged$Type))
 
 # normalize all numeric numbers columns
-num_col_names <- c('Size', 'Temperature', 'Fuel_Price', 'MarkDown1', 'MarkDown2', 'MarkDown3', 'MarkDown4', 'MarkDown5', 'CPI', 'Unemployment')
+num_col_names <- c('Type', 'Date', 'Size', 'Temperature', 'Fuel_Price', 'MarkDown1', 'MarkDown2', 'MarkDown3', 'MarkDown4', 'MarkDown5', 'CPI', 'Unemployment', 'Store_Dep')
 train_merged[num_col_names] <- normalize(train_merged[num_col_names])
 
+# replace all NA values by zeros (nnet can only omit whole records with NA values) 
+train_merged[is.na(train_merged)] <- 0
+
+# train the neural network
 net <- neuralnet(Weekly_Sales ~ Date + IsHoliday + Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + Store_Dep, 
-	train_merged,  hidden = 40, threshold = 0.005,
+	train_merged,  hidden = 10, threshold = 0.005,
 	stepmax = 1000000, rep = 1, startweights = NULL,
 	learningrate.limit = NULL, learningrate.factor = NULL, learningrate=0.1,
 	lifesign = "full", lifesign.step = 1000,
@@ -69,10 +77,12 @@ net <- neuralnet(Weekly_Sales ~ Date + IsHoliday + Type + Size + Temperature + F
 	linear.output = TRUE, exclude = NULL,
 	constant.weights = NULL, likelihood = FALSE)
 
+# read and merge the test data
 test <- read.csv("../data/test.csv", header=TRUE)
-
 test_merged <- merge(stores, test)
 
+# tale only the data for store 1 to 5 as a sample (faster calculation)
+test_merged <- subset(test_merged, Store <= 5)
 
 # the network was trained knowing features like Fuel_Price and MarkDown2
 # the test data does not provide these features so we handle them as missing data
@@ -110,10 +120,13 @@ test_merged[c('Type')] <- as.numeric(as.character(test_merged$Type))
 test_merged[c('Store')] <- NULL
 test_merged[c('Dept')] <- NULL
 
-
 # normalize all numeric numbers columns
 test_merged[num_col_names] <- normalize(test_merged[num_col_names])
 
+# replace all NA values by zeros (nnet can only omit whole records with NA values) 
+test_merged[is.na(test_merged)] <- 0
+
+# generate test results and export them into a csv file
 Id <- paste(test[, c('Store')], test[, c('Dept')], test[, c('Date')], sep = "_")
 prediction <- compute(net, test_merged, rep = 1)
 Weekly_Sales <- prediction$net.result
