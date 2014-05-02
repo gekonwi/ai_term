@@ -7,13 +7,50 @@ options(na.action = "na.pass")
 
 # normalizing 
 normalize <- function(x) {
-	x <- sweep(x, 2, apply(x, 2, min))
-	sweep(x, 2, apply(x, 2, max), "/") 
+	x <- x - min(x, na.rm = TRUE)
+	x <- x / max(x, na.rm = TRUE)
 }
 
 dateFun <- function(x) {
 	z <- paste(as.numeric(format(as.Date(x), "%Y")),"-01-01", sep="")
 	as.numeric(difftime(as.Date(x, "%Y-%m-%d"), as.Date(z)))+1
+}
+
+# filling in missing vals
+Fill <- function(col){
+	if (is.na(col[1])) {
+		col[1] <- NextNotNA(1, col)
+		lastVal <- col[1]
+	}
+	
+	rowCount <- length(col)
+	for(i in 2:(rowCount - 1)){		
+		if (i %% 10000 == 1)
+			print(paste("filled", i, "of", rowCount))
+		
+		if(!is.na(col[i])) {
+			lastVal <- col[i]
+			next			
+		}
+		
+		nextVal <- NextNotNA(i, col)
+
+		col[i] <- (lastVal + nextVal)/2
+		lastVal <- col[i]
+	}
+	
+	if (is.na(col[rowCount]))
+		col[rowCount] <- lastVal
+	
+	col
+}
+
+NextNotNA <- function(i,col){
+	for(j in i+1:length(col)){
+		if(!is.na(col[j]))
+			return(col[j])
+	}
+	return(mean(col, na.rm = TRUE))
 }
 
 # temp <- cbind(train[1:2],lapply(train[3],DateFun))
@@ -25,7 +62,15 @@ dateFun <- function(x) {
 stores <- read.csv("../data/stores.csv", header=TRUE)
 features <- read.csv("../data/features.csv", header=TRUE)
 train <- read.csv("../data/train.csv", header=TRUE)
-train_merged <- merge(stores, features)
+features_merged <- merge(stores,features)
+features_temp <- features_merged[with(features_merged,order(IsHoliday, Type, Size, Store, Date, Unemployment, Fuel_Price, CPI, Temperature)),]
+features_merged <- features_temp
+features_merged$MarkDown2 <- Fill(features_merged$MarkDown2)
+features_merged$MarkDown3 <- Fill(features_merged$MarkDown3)
+features_merged$MarkDown4 <- Fill(features_merged$MarkDown4)
+features_merged$MarkDown5 <- Fill(features_merged$MarkDown5)
+features_merged$MarkDown1 <- Fill(features_merged$MarkDown1)
+train_merged <- merge(stores, features_merged)
 train_merged <- merge(train_merged, train)
 
 # transform the Date values into numeric values between 0 (representing "01/01/XXXX") and 1 (representing "12/31/XXXX") - ignoring the year, assuming similar behavior every year.
@@ -104,3 +149,18 @@ write.csv(result, file ="result.csv", row.names=FALSE)
 # on UNix run this:
 # cd ~/Documents/ai_term
 # export R_LIBS="~/myRdir"
+
+# Store: 45
+# Date 143
+# IsHoliday: 2
+# Type: 3
+# Size: 40
+# Temperature: 3528
+# Fuel_Price: 892
+# MarkDown1: 2278
+# MarkDown2: 1500
+# MarkDown3: 1663
+# MarkDown4: 1945
+# MarkDown5: 2294
+# CPI: 2145
+# Unemployment: 349
