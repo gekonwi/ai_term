@@ -32,8 +32,31 @@ train_merged <- merge(train_merged, train)
 train_merged[c('Date')] <- lapply(train_merged[c('Date')], dateFun)
 
 # create a unique ID for each store-department pair
-train_merged <- transform(train_merged, Store_Dep = paste(Store * max(Dept) + Dept, "_", sep=""))
+train_merged <- transform(train_merged, Store_Dep = Store * max(Dept) + Dept)
 
+# Holiday TRUE/FALSE to 1/0
+Holiday <- function(x) {
+	replace(x, x == TRUE, 1)
+	replace(x, x == FALSE, 0)
+}
+Holiday <- function(x) {
+	replace(x, x == 2, 1)
+	replace(x, x == 1, 0)
+}
+train_merged[c('IsHoliday')] <- lapply(train_merged[c('IsHoliday')], Holiday)
+
+# Type A/B/C to 1/2/3
+
+levels(train_merged$Type) <- c(levels(train_merged$Type), "1")
+train_merged$Type[train_merged$Type == 'A'] <- '1'
+
+levels(train_merged$Type) <- c(levels(train_merged$Type), "2")
+train_merged$Type[train_merged$Type == 'B'] <- '2'
+
+levels(train_merged$Type) <- c(levels(train_merged$Type), "3")
+train_merged$Type[train_merged$Type == 'C'] <- '3'
+
+train_merged[c('Type')] <- as.numeric(as.character(train_merged$Type))
 
 # normalize all numeric numbers columns
 num_col_names <- c('Size', 'Temperature', 'Fuel_Price', 'MarkDown1', 'MarkDown2', 'MarkDown3', 'MarkDown4', 'MarkDown5', 'CPI', 'Unemployment')
