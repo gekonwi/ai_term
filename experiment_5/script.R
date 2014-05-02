@@ -64,7 +64,7 @@ num_col_names <- c('Type', 'Date', 'Size', 'Temperature', 'Fuel_Price', 'MarkDow
 train_merged[num_col_names] <- normalize(train_merged[num_col_names])
 
 # replace all NA values by zeros (nnet can only omit whole records with NA values) 
-train_merged[is.na(train_merged)] <- 0
+#train_merged[is.na(train_merged)] <- 0
 
 # train the neural network
 net <- neuralnet(Weekly_Sales ~ Date + IsHoliday + Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + Store_Dep, 
@@ -91,7 +91,7 @@ missing_col_names <- missing_col_names[missing_col_names != "Weekly_Sales"]
 for (col_name in colnames(test_merged))
 	missing_col_names <- missing_col_names[missing_col_names != col_name]
 for (col_name in missing_col_names)
-	test_merged[, col_name] <- 0
+	test_merged[, col_name] <- NA
 
 
 # transform the Date values into numeric values between 0 (representing "01/01/XXXX") and 1 (representing "12/31/XXXX") - ignoring the year, assuming similar behavior every year.
@@ -124,7 +124,7 @@ test_merged[c('Dept')] <- NULL
 test_merged[num_col_names] <- normalize(test_merged[num_col_names])
 
 # replace all NA values by zeros (nnet can only omit whole records with NA values) 
-test_merged[is.na(test_merged)] <- 0
+#test_merged[is.na(test_merged)] <- 0
 
 # generate test results and export them into a csv file
 Id <- paste(test[, c('Store')], test[, c('Dept')], test[, c('Date')], sep = "_")
