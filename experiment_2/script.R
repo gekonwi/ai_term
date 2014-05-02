@@ -39,10 +39,7 @@ Holiday <- function(x) {
 	replace(x, x == TRUE, 1)
 	replace(x, x == FALSE, 0)
 }
-Holiday <- function(x) {
-	replace(x, x == 2, 1)
-	replace(x, x == 1, 0)
-}
+
 train_merged[c('IsHoliday')] <- lapply(train_merged[c('IsHoliday')], Holiday)
 
 # Type A/B/C to 1/2/3
