@@ -7,8 +7,8 @@ options(na.action = "na.pass")
 
 # normalizing 
 normalize <- function(x) {
-	x <- sweep(x, 2, apply(x, 2, min))
-	sweep(x, 2, apply(x, 2, max), "/") 
+	x <- x - min(x, na.rm = TRUE)
+	x <- x / max(x, na.rm = TRUE)
 }
 
 dateFun <- function(x) {
