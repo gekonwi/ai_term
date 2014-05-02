@@ -121,22 +121,43 @@ test_merged <- merge(stores, test)
 
 # the network was trained knowing features like Fuel_Price and MarkDown2
 # the test data does not provide these features so we handle them as missing data
-missing_col_names <- colnames(train_net_data)
+missing_col_names <- colnames(train_merged)
 missing_col_names <- missing_col_names[missing_col_names != "Weekly_Sales"]
 for (col_name in colnames(test_merged))
 	missing_col_names <- missing_col_names[missing_col_names != col_name]
 for (col_name in missing_col_names)
-	test_merged[, col_name] <- NA
+	test_merged[, col_name] <- 0
 
-# turn the qualitative columns into binary quantitative columns
-# e.g. Type: {A, B, A, B, B}
-# becomes: TypeA: {1, 0, 1, 0, 0}, TypeB: {0, 1, 0, 1, 1}
-test_net_data <- model.matrix(~Type + Size + Temperature + Fuel_Price + MarkDown1 + MarkDown2 + MarkDown3 + MarkDown4 + MarkDown5 + CPI + Unemployment + IsHoliday, 
-	data = test_merged)
-a <- train_net_data[, -1] # delete the generated "(Intercept)" column containing only "1"
 
-Id <- paste(test[, 'Store'], test[, 'Dept'], test[, 'Date'], sep = "_")
-prediction <- compute(net, test_net_data, rep = 1)
+# transform the Date values into numeric values between 0 (representing "01/01/XXXX") and 1 (representing "12/31/XXXX") - ignoring the year, assuming similar behavior every year.
+test_merged[c('Date')] <- lapply(test_merged[c('Date')], dateFun)
+
+# create a unique ID for each store-department pair
+test_merged <- transform(test_merged, Store_Dep = Store * max(Dept) + Dept)
+
+# Holiday TRUE/FALSE to 1/0
+test_merged[c('IsHoliday')] <- lapply(test_merged[c('IsHoliday')], Holiday)
+
+# Type A/B/C to 1/2/3
+
+levels(test_merged$Type) <- c(levels(test_merged$Type), "1")
+test_merged $Type[test_merged $Type == 'A'] <- '1'
+
+levels(test_merged$Type) <- c(levels(test_merged$Type), "2")
+test_merged$Type[test_merged$Type == 'B'] <- '2'
+
+levels(test_merged$Type) <- c(levels(test_merged$Type), "3")
+test_merged$Type[test_merged$Type == 'C'] <- '3'
+
+test_merged[c('Type')] <- as.numeric(as.character(test_merged$Type))
+
+
+# remove the columns which are not used for the prediction
+test_merged[c('Store')] <- NULL
+test_merged[c('Dept')] <- NULL
+
+Id <- paste(test[, c('Store')], test[, c('Dept')], test[, c('Date')], sep = "_")
+prediction <- compute(net, test_merged, rep = 1)
 Weekly_Sales <- prediction$net.result
 
 result <- cbind(Id, Weekly_Sales)
