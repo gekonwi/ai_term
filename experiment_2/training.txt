@@ -167,3 +167,21 @@ hidden: 10    thresh: 0.005    rep: 1/1    steps:     100	min thresh: 894996119.
                                                     16700	min thresh: 4108979.761
                                                     16800	min thresh: 15.79249662
                                                     16825	error: 19371954302702    	time: 21.96 mins
+
+
+
+
+hidden: 13    thresh: 0.005    rep: 1/1    steps:    1000       min thresh: 832204792.9
+                                                     2000       min thresh: 763900192.9
+                                                     3000       min thresh: 695595592.9
+                                                     4000       min thresh: 627290992.9
+                                                     5000       min thresh: 558986392.9
+                                                     6000       min thresh: 490681792.9
+                                                     7000       min thresh: 422377192.9
+                                                     8000       min thresh: 354072592.9
+                                                     9000       min thresh: 285767992.9
+                                                    10000       min thresh: 217463392.9
+                                                    11000       min thresh: 149158792.9
+                                                    12000       min thresh: 80854192.9
+                                                    13000       min thresh: 12549592.9
+                                                    13252       error: 19371954302702           time: 18.19 mins
